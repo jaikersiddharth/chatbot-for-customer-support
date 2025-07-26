@@ -1,19 +1,21 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import psycopg2
+from .chatbot import ChatBot
 import os
 from typing import List, Optional
 
 app = FastAPI()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+chatbot = ChatBot()
 
 def get_db():
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
 class MessageIn(BaseModel):
-    session_id: int
+    session_id: Optional[int] = None
     sender: str  # 'user' or 'ai'
     content: str
 
@@ -23,6 +25,13 @@ class MessageOut(BaseModel):
     sender: str
     content: str
     timestamp: str
+
+class ChatRequest(BaseModel):
+    message: str
+    conversation_id: Optional[int] = None
+
+class ChatResponse(BaseModel):
+    response: str
 
 class SessionOut(BaseModel):
     session_id: int
@@ -95,3 +104,35 @@ def get_session_messages(session_id: int):
             "timestamp": str(r[4])
         } for r in rows
     ]
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    # Get or create session if conversation_id is provided
+    session_id = request.conversation_id
+    
+    conn = get_db()
+    cur = conn.cursor()
+    
+    try:
+        # Store user message
+        cur.execute("""
+            INSERT INTO messages (session_id, sender, content)
+            VALUES (%s, 'user', %s)
+        """, (session_id, request.message))
+        
+        # Get AI response
+        ai_response = await chatbot.get_response(request.message)
+        
+        # Store AI response
+        cur.execute("""
+            INSERT INTO messages (session_id, sender, content)
+            VALUES (%s, 'ai', %s)
+        """, (session_id, ai_response))
+        
+        conn.commit()
+        return {"response": ai_response}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        cur.close()
+        conn.close()
