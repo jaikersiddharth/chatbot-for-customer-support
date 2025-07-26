@@ -19,6 +19,10 @@ services:
       - db
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/chatbot
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/chatbot
     ports:
       - "8000:8000"
 
