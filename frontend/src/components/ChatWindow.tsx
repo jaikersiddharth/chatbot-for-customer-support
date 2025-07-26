@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import MessageList from './MessageList';
 import UserInput from './UserInput';
+import ConversationPanel from './ConversationPanel';
 import useChatStore from '../store/chatStore';
 import './ChatWindow.css';
 
@@ -45,10 +46,19 @@ const ChatWindow: React.FC = () => {
     }
   };
 
+  const fetchSessions = useChatStore(state => state.fetchSessions);
+
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+
   return (
     <div className="chat-window">
-      <MessageList />
-      <UserInput onSend={sendMessage} disabled={loading} />
+      <ConversationPanel />
+      <div className="chat-main">
+        <MessageList />
+        <UserInput onSend={sendMessage} disabled={loading} />
+      </div>
     </div>
   );
 };
