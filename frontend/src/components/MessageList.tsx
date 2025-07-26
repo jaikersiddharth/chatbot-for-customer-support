@@ -1,19 +1,11 @@
 import React from 'react';
 import Message from './Message';
+import useChatStore from '../store/chatStore';
 import './MessageList.css';
 
-interface Message {
-  id: number;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: string;
-}
+const MessageList: React.FC = () => {
+  const messages = useChatStore(state => state.messages);
 
-interface MessageListProps {
-  messages: Message[];
-}
-
-const MessageList: React.FC<MessageListProps> = ({ messages }) => {
   return (
     <div className="message-list">
       {messages.map(message => (

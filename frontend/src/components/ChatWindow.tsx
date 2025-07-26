@@ -1,30 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import MessageList from './MessageList';
 import UserInput from './UserInput';
+import useChatStore from '../store/chatStore';
 import './ChatWindow.css';
 
-interface Message {
-  id: number;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: string;
-}
-
 const ChatWindow: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { loading, setLoading, addMessage } = useChatStore();
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return;
 
     // Add user message
-    const userMessage: Message = {
-      id: Date.now(),
+    addMessage({
       content: message,
-      sender: 'user',
-      timestamp: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, userMessage]);
+      sender: 'user'
+    });
     setLoading(true);
 
     try {
@@ -39,15 +29,17 @@ const ChatWindow: React.FC = () => {
       const data = await response.json();
       
       // Add AI response
-      const aiMessage: Message = {
-        id: Date.now() + 1,
+      // Add AI response
+      addMessage({
         content: data.response,
-        sender: 'ai',
-        timestamp: new Date().toISOString()
-      };
-      setMessages(prev => [...prev, aiMessage]);
+        sender: 'ai'
+      });
     } catch (error) {
       console.error('Error sending message:', error);
+      addMessage({
+        content: 'Sorry, there was an error processing your request.',
+        sender: 'ai'
+      });
     } finally {
       setLoading(false);
     }
@@ -55,7 +47,7 @@ const ChatWindow: React.FC = () => {
 
   return (
     <div className="chat-window">
-      <MessageList messages={messages} />
+      <MessageList />
       <UserInput onSend={sendMessage} disabled={loading} />
     </div>
   );

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
+import useChatStore from '../store/chatStore';
 import './UserInput.css';
 
 interface UserInputProps {
@@ -7,13 +8,13 @@ interface UserInputProps {
 }
 
 const UserInput: React.FC<UserInputProps> = ({ onSend, disabled }) => {
-  const [message, setMessage] = useState('');
+  const { inputValue, setInputValue } = useChatStore();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !disabled) {
-      onSend(message);
-      setMessage('');
+    if (inputValue.trim() && !disabled) {
+      onSend(inputValue);
+      setInputValue('');
     }
   };
 
@@ -21,12 +22,12 @@ const UserInput: React.FC<UserInputProps> = ({ onSend, disabled }) => {
     <form className="user-input" onSubmit={handleSubmit}>
       <input
         type="text"
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
         placeholder="Type your message..."
         disabled={disabled}
       />
-      <button type="submit" disabled={disabled || !message.trim()}>
+      <button type="submit" disabled={disabled || !inputValue.trim()}>
         Send
       </button>
     </form>
